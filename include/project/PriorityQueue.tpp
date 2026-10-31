@@ -177,25 +177,34 @@ bool AdaptableHeapPriorityQueue<K,V,Compare>::validHeap() const noexcept{
     return true;
 }
 template <typename T, typename Compare>
-void heapify(std::vector<T>& values,std::size_t i,std::size_t n,Compare comp){
-    std::size_t largest=i;
-    std::size_t left=2*i+1;
-    std::size_t right=2*i+2;
-    if(left<n&&comp(values[left],values[largest]))largest=left;
-    if(right<n&&comp(values[right],values[largest]))largest=right;
-    if(largest!=i){
-        std::swap(values[i],values[largest]);
-        heapify(values,largest,n,comp);
+void heapify(std::vector<T>& values, std::size_t i, std::size_t n, Compare comp) {
+    std::size_t largest = i;
+    const std::size_t left = 2 * i + 1;
+    const std::size_t right = 2 * i + 2;
+
+    if (left < n && comp(values[largest], values[left])) {
+        largest = left;
+    }
+    if (right < n && comp(values[largest], values[right])) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        std::swap(values[i], values[largest]);
+        heapify(values, largest, n, comp);
     }
 }
 
 template <typename T, typename Compare>
-void heapSort(std::vector<T>& values,Compare comp){
-    // TODO: implement in-place heap sort. Default comparator must produce ascending order.
-    std::size_t n=values.size();
-    for(std::size_t i=n/2;i>0;--i)heapify(values,i,n,comp);
-    for(std::size_t i=n-1;i>0;--i){
-        std::swap(values[0],values[i]);
-        heapify(values,0,i,comp);
+void heapSort(std::vector<T>& values, Compare comp) {
+    const std::size_t n = values.size();
+
+    for (std::size_t i = n / 2; i > 0; --i) {
+        heapify(values, i - 1, n, comp);
+    }
+
+    for (std::size_t end = n; end > 1; --end) {
+        std::swap(values[0], values[end - 1]);
+        heapify(values, 0, end - 1, comp);
     }
 }
