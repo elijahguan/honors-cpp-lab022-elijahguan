@@ -95,24 +95,78 @@ const typename AdaptableHeapPriorityQueue<K,V,Compare>::Entry& AdaptableHeapPrio
     return *heap_.front();
 }
 template <typename K, typename V, typename Compare>
-typename AdaptableHeapPriorityQueue<K,V,Compare>::Entry AdaptableHeapPriorityQueue<K,V,Compare>::removeMin(){
-    throw std::logic_error("removeMin not implemented");
+typename AdaptableHeapPriorityQueue<K,V,Compare>::Entry
+AdaptableHeapPriorityQueue<K,V,Compare>::removeMin(){
+    if (empty()) {
+        throw std::out_of_range("removeMin() on empty priority queue");
+    }
+
+    Entry result = *heap_.front();
+    remove(heap_.front());
+    return result;
 }
+
 template <typename K, typename V, typename Compare>
 void AdaptableHeapPriorityQueue<K,V,Compare>::remove(EntryPtr e){
-    (void)e;/* TODO */
+    validateHandle(e);
+
+    const std::size_t i = e->index;
+    const std::size_t last = heap_.size() - 1;
+
+    if (i != last) {
+        swapEntries(i, last);
+    }
+
+    heap_.pop_back();
+    delete e;
+
+    if (i < heap_.size()) {
+        bubble(i);
+    }
 }
+
 template <typename K, typename V, typename Compare>
 void AdaptableHeapPriorityQueue<K,V,Compare>::replaceKey(EntryPtr e,const K& k){
-    (void)e;(void)k;/* TODO */
+    validateHandle(e);
+    e->key = k;
+    bubble(e->index);
 }
+
 template <typename K, typename V, typename Compare>
 void AdaptableHeapPriorityQueue<K,V,Compare>::replaceValue(EntryPtr e,const V& v){
-    (void)e;(void)v;/* TODO */
+    validateHandle(e);
+    e->value = v;
 }
+
 template <typename K, typename V, typename Compare>
-void AdaptableHeapPriorityQueue<K,V,Compare>::buildHeap(std::vector<std::pair<K,V>> entries){
-    (void)entries;/* TODO: bottom-up construction, not repeated insert */
+void AdaptableHeapPriorityQueue<K,V,Compare>::buildHeap(
+    std::vector<std::pair<K,V>> entries
+){
+    for (auto e : heap_) {
+        delete e;
+    }
+    heap_.clear();
+    heap_.reserve(entries.size());
+
+    for (const auto& item : entries) {
+        EntryPtr e = new Entry;
+        e->key = item.first;
+        e->value = item.second;
+        e->index = heap_.size();
+        e->id = nextId_++;
+
+        try {
+            heap_.push_back(e);
+        } catch (...) {
+            delete e;
+            throw;
+        }
+    }
+
+    // Bottom-up construction: O(n), rather than inserting each entry.
+    for (std::size_t i = heap_.size() / 2; i > 0; --i) {
+        downHeap(i - 1);
+    }
 }
 template <typename K, typename V, typename Compare>
 bool AdaptableHeapPriorityQueue<K,V,Compare>::validHeap() const noexcept{
